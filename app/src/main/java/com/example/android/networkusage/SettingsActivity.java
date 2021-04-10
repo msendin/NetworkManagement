@@ -14,8 +14,13 @@
 
 package com.example.android.networkusage;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.PreferenceFragmentCompat;
+
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
@@ -27,75 +32,26 @@ import android.preference.PreferenceFragment;
  * the ACTION_MANAGE_NETWORK_USAGE action. This activity provides a settings UI
  * for users to specify network settings to control data usage.
  */
-public class SettingsActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
+public class SettingsActivity extends AppCompatActivity implements OnSharedPreferenceChangeListener {
 
-    /*@Override
-    public void onCreate(Bundle savedInstanceState) {
-        // Indicate here the XML resource you created above that holds the preferences
-        super.onCreate(savedInstanceState);
-
-        addPreferencesFromResource(R.xml.preferences);
-    }
-
-    */
-
+    @SuppressWarnings("unused")
     @Override
-    protected void onCreate(final Bundle savedInstanceState)
+    protected void onCreate(@Nullable Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        getFragmentManager().beginTransaction().replace(android.R.id.content, new MyPreferenceFragment()).commit();
+        getSupportFragmentManager().beginTransaction().replace(android.R.id.content, new MyPreferenceFragment()).commit();
     }
 
-    public static class MyPreferenceFragment extends PreferenceFragment
-    {
+    public static class MyPreferenceFragment extends PreferenceFragmentCompat {
         @Override
-        public void onCreate(final Bundle savedInstanceState)
-        {
-            super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.preferences);
+        public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+            {
+                super.onCreate(savedInstanceState);
+                setPreferencesFromResource(R.xml.preferences, rootKey);
+            }
         }
     }
 
-/*
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
-
-        //addPreferencesFromResource(R.xml.preferences);
-        return inflater.inflate(R.layout.fragment_settings, container, false);
-    }
-
-
-/*
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        // Loads the XML preferences file.
-        addPreferencesFromResource(R.xml.preferences);
-    }
-
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        // Registers a callback to be invoked whenever a user changes a preference.
-        getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-
-        // Unregisters the listener set in onResume().
-        // It's best practice to unregister listeners when your app isn't using them to cut down on
-        // unnecessary system overhead. You do this in onPause().
-        getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
-    }
-
-    */
-    // Fires when the user changes a preference.
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         // Sets refreshDisplay to true so that when the user returns to the main
@@ -103,3 +59,4 @@ public class SettingsActivity extends PreferenceActivity implements OnSharedPref
         NetworkActivity.refreshDisplay = true;
     }
 }
+

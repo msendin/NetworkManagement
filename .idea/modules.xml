@@ -2,9 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$USER_HOME$/AndroidStudioProjects/NetworkManagementBo/NetworkManagement.iml" filepath="$USER_HOME$/AndroidStudioProjects/NetworkManagementBo/NetworkManagement.iml" />
-      <module fileurl="file://$PROJECT_DIR$/NetworkManagementBo.iml" filepath="$PROJECT_DIR$/NetworkManagementBo.iml" group="NetworkManagementBo" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="NetworkManagementBo/app" />
+      <module fileurl="file://$PROJECT_DIR$/NetworkManagementBo.iml" filepath="$PROJECT_DIR$/NetworkManagementBo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/NetworkManagementBo.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/NetworkManagementBo.app.iml" />
     </modules>
   </component>
 </project>

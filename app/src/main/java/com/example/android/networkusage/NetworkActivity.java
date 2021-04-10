@@ -23,6 +23,8 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -106,7 +108,7 @@ public class NetworkActivity extends Activity {
     public void onStart() {
         super.onStart();
         // Gets the user's network preference settings
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences sharedPrefs = getSharedPreferences("my.app.packagename_preferences", Context.MODE_PRIVATE);
 
         // Retrieves a string value for the preferences. The second parameter
         // is the default value to use if a preference value is not found.
@@ -129,16 +131,23 @@ public class NetworkActivity extends Activity {
     // Checks the network connection and sets the wifiConnected and mobileConnected
     // variables accordingly.
     private void updateConnectedFlags() {
-        ConnectivityManager connMgr =
+        ConnectivityManager cMgr =
                 (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected()) {
-            wifiConnected = networkInfo.getType() == ConnectivityManager.TYPE_WIFI;
-            mobileConnected = networkInfo.getType() == ConnectivityManager.TYPE_MOBILE;
-        } else {
+        Network nw = cMgr.getActiveNetwork();
+        if (nw == null) {
             wifiConnected = false;
             mobileConnected = false;
+        } else {
+            NetworkCapabilities actNw = cMgr.getNetworkCapabilities(nw);
+            if (actNw == null) {
+                wifiConnected = false;
+                mobileConnected = false;
+            }
+            if (actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
+                wifiConnected = true;
+            else if (actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
+                mobileConnected = true;
         }
     }
 
@@ -177,28 +186,15 @@ public class NetworkActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-        case R.id.settings:
+            case R.id.settings:
                 Intent settingsActivity = new Intent(getBaseContext(), SettingsActivity.class);
                 startActivity(settingsActivity);
-                //SettingsActivity.addPreferencesFromResource(R.xml.preferences);
-
-            /*FragmentManager mFragmentManager = getFragmentManager();
-            FragmentTransaction mFragmentTransaction = mFragmentManager
-                    .beginTransaction();
-            PrefsFragment mPrefsFragment = new PrefsFragment();
-            mFragmentTransaction.replace(android.R.id.content, mPrefsFragment);
-            mFragmentTransaction.commit(); */
-
                 return true;
-        case R.id.refresh:
-
-            /// AQUEST ES EL BUG !!!! Sense actualitzar els flags no se n'entara encara que facis Refresh.
-            updateConnectedFlags();
-            ///  CAL FER AIXO AQUI EXPLICITAMENT
-
-            loadPage();
+            case R.id.refresh:
+                updateConnectedFlags();
+                loadPage();
                 return true;
-        default:
+            default:
                 return super.onOptionsItemSelected(item);
         }
     }
@@ -241,7 +237,7 @@ public class NetworkActivity extends Activity {
         DateFormat formatter = new SimpleDateFormat("MMM dd h:mmaa", Locale.US);
 
         // Checks whether the user set the preference to include summary text
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences sharedPrefs = getSharedPreferences( "my.app.packagename_preferences", Context.MODE_PRIVATE);
         boolean pref = sharedPrefs.getBoolean("summaryPref", false);
 
         StringBuilder htmlString = new StringBuilder();
@@ -252,8 +248,8 @@ public class NetworkActivity extends Activity {
         try {
             stream = downloadUrl(urlString);
             entries = stackOverflowXmlParser.parse(stream);
-        // Makes sure that the InputStream is closed after the app is
-        // finished using it.
+            // Makes sure that the InputStream is closed after the app is
+            // finished using it.
         } finally {
             if (stream != null) {
                 Log.i("NA", "ERROR: stream no null dins de loadXmlFromNetwork");
@@ -290,56 +286,44 @@ public class NetworkActivity extends Activity {
         conn.setDoInput(true);
         // Starts the query
         conn.connect();
-        InputStream stream = conn.getInputStream();
-        return stream;
+        return conn.getInputStream();
     }
 
     /**
-     *
      * This BroadcastReceiver intercepts the android.net.ConnectivityManager.CONNECTIVITY_ACTION,
      * which indicates a connection change. It checks whether the type is TYPE_WIFI.
      * If it is, it checks whether Wi-Fi is connected and sets the wifiConnected flag in the
      * main activity accordingly.
-     *
      */
     public class NetworkReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
             ConnectivityManager connMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 
+            Network nw = connMgr.getActiveNetwork();
             // Checks the user prefs and the network connection. Based on the result, decides
             // whether
             // to refresh the display or keep the current display.
             // If the userpref is Wi-Fi only, checks to see if the device has a Wi-Fi connection.
-            if (WIFI.equals(sPref) && networkInfo != null
-                    && networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
-                // If device has its Wi-Fi connection, sets refreshDisplay
-                // to true. This causes the display to be refreshed when the user
-                // returns to the app.
-                refreshDisplay = true;       /********** UNIFICAR 1 SOL COP *******/
-                /*********** jo enlloc de refreshDisplay = true; faria loadPage(); *************/
-                /********** En TOTAL: 3 puts de  millora : onOptionsItemSelected(), que falta el updateConnectedFlags(), i aquestes 2 ********/
-                /********** Cap d'elles al repositori **********/
 
-                Toast.makeText(context, R.string.wifi_connected, Toast.LENGTH_SHORT).show();
-
-                // If the setting is ANY network and there is a network connection
-                // (which by process of elimination would be mobile), sets refreshDisplay to true.
-            } else if (ANY.equals(sPref) && networkInfo != null) {
-                refreshDisplay = true;
-
-                // Otherwise, the app can't download content--either because there is no network
-                // connection (mobile or Wi-Fi), or because the pref setting is WIFI, and there
-                // is no Wi-Fi connection.
-                // Sets refreshDisplay to false.
-            } else {
+            if (nw == null) {
                 refreshDisplay = true;
                 Toast.makeText(context, R.string.lost_connection, Toast.LENGTH_SHORT).show();
+            } else {
+                NetworkCapabilities actNw = connMgr.getNetworkCapabilities(nw);
+                if (actNw == null) {
+                    refreshDisplay = true;
+                    Toast.makeText(context, R.string.lost_connection, Toast.LENGTH_SHORT).show();
+                } else if (WIFI.equals(sPref) && actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                    refreshDisplay = true;
+                    Toast.makeText(context, R.string.wifi_connected, Toast.LENGTH_SHORT).show();
+                } else if (ANY.equals(sPref))
+                    refreshDisplay = true;
             }
         }
     }
+
 
 
 
@@ -348,14 +332,13 @@ public class NetworkActivity extends Activity {
             //String[] PERMISSIONS = {android.Manifest.permission.CALL_PHONE};
             if (ActivityCompat.checkSelfPermission(getApplicationContext(),
                     Manifest.permission.INTERNET) ==
-                    PackageManager.PERMISSION_GRANTED  &&  ActivityCompat.checkSelfPermission(getApplicationContext(),
+                    PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(),
                     Manifest.permission.ACCESS_NETWORK_STATE) ==
                     PackageManager.PERMISSION_GRANTED)
                 return true;
             else
                 return false;
-        }
-        else
+        } else
             return true;
     }
 
@@ -364,19 +347,8 @@ public class NetworkActivity extends Activity {
                 new String[]{Manifest.permission.INTERNET, Manifest.permission.ACCESS_NETWORK_STATE,},
                 0);
     }
-
-
-
-/*
-    public static class PrefsFragment extends PreferenceFragment {
-
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-
-            // Load the preferences from an XML resource
-            addPreferencesFromResource(R.xml.preferences);
-        }
-    }
-*/
 }
+
+
+
+
