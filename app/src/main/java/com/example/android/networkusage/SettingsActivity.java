@@ -32,22 +32,22 @@ import android.preference.PreferenceFragment;
  * the ACTION_MANAGE_NETWORK_USAGE action. This activity provides a settings UI
  * for users to specify network settings to control data usage.
  */
-public class SettingsActivity extends AppCompatActivity implements OnSharedPreferenceChangeListener {
+public class SettingsActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
 
     @SuppressWarnings("unused")
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        getSupportFragmentManager().beginTransaction().replace(android.R.id.content, new MyPreferenceFragment()).commit();
+        getFragmentManager().beginTransaction().replace(android.R.id.content, new MyPreferenceFragment()).commit();
     }
 
-    public static class MyPreferenceFragment extends PreferenceFragmentCompat {
+    public static class MyPreferenceFragment extends PreferenceFragment {
         @Override
-        public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+        public void onCreate(Bundle savedInstanceState) {
             {
                 super.onCreate(savedInstanceState);
-                setPreferencesFromResource(R.xml.preferences, rootKey);
+                addPreferencesFromResource(R.xml.preferences);
             }
         }
     }
