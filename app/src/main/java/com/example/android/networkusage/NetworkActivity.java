@@ -99,7 +99,8 @@ public class NetworkActivity extends Activity {
         this.registerReceiver(receiver, filter);
 
         if (Build.VERSION.SDK_INT >= 23)
-            requestPermissions();
+            if (! ckeckPermissions())
+                requestPermissions();
 
         // getFragmentManager().beginTransaction().replace(android.R.id.content, new PrefsFragment()).commit();
     }
