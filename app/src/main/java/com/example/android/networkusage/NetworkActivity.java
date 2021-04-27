@@ -75,6 +75,8 @@ public class NetworkActivity extends Activity {
     public static final String ANY = "Any";
     private static final String URL = "http://stackoverflow.com/feeds/tag?tagnames=android&sort=newest";
 
+    private SharedPreferences sharedPrefs;
+
     // Whether there is a Wi-Fi connection.
     private static boolean wifiConnected = false;
     // Whether there is a mobile connection.
@@ -108,7 +110,7 @@ public class NetworkActivity extends Activity {
     public void onStart() {
         super.onStart();
         // Gets the user's network preference settings
-        SharedPreferences sharedPrefs = getSharedPreferences("my.app.packagename_preferences", Context.MODE_PRIVATE);
+        sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         // Retrieves a string value for the preferences. The second parameter
         // is the default value to use if a preference value is not found.
@@ -144,7 +146,7 @@ public class NetworkActivity extends Activity {
                 wifiConnected = false;
                 mobileConnected = false;
             }
-            if (actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
+            else if (actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
                 wifiConnected = true;
             else if (actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
                 mobileConnected = true;
@@ -237,7 +239,7 @@ public class NetworkActivity extends Activity {
         DateFormat formatter = new SimpleDateFormat("MMM dd h:mmaa", Locale.US);
 
         // Checks whether the user set the preference to include summary text
-        SharedPreferences sharedPrefs = getSharedPreferences( "my.app.packagename_preferences", Context.MODE_PRIVATE);
+
         boolean pref = sharedPrefs.getBoolean("summaryPref", false);
 
         StringBuilder htmlString = new StringBuilder();
@@ -299,7 +301,9 @@ public class NetworkActivity extends Activity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
+
             ConnectivityManager connMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            sPref = sharedPrefs.getString("listPref", "Wi-Fi");
 
             Network nw = connMgr.getActiveNetwork();
             // Checks the user prefs and the network connection. Based on the result, decides
@@ -315,7 +319,8 @@ public class NetworkActivity extends Activity {
                 if (actNw == null) {
                     refreshDisplay = true;
                     Toast.makeText(context, R.string.lost_connection, Toast.LENGTH_SHORT).show();
-                } else if (WIFI.equals(sPref) && actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                } else if (WIFI.equals(sPref) && (actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) )) {
+                    //  || actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
                     refreshDisplay = true;
                     Toast.makeText(context, R.string.wifi_connected, Toast.LENGTH_SHORT).show();
                 } else if (ANY.equals(sPref))
