@@ -320,8 +320,7 @@ public class NetworkActivity extends Activity {
                 if (actNw == null) {
                     refreshDisplay = true;
                     Toast.makeText(context, R.string.lost_connection, Toast.LENGTH_SHORT).show();
-                } else if (WIFI.equals(sPref) && (actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) )) {
-                    //  || actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+                } else if (WIFI.equals(sPref) && (actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))) {
                     refreshDisplay = true;
                     Toast.makeText(context, R.string.wifi_connected, Toast.LENGTH_SHORT).show();
                 } else if (ANY.equals(sPref))
