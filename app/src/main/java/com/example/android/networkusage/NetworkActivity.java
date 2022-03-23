@@ -15,6 +15,7 @@
 package com.example.android.networkusage;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -98,8 +99,7 @@ public class NetworkActivity extends Activity {
         receiver = new NetworkReceiver();
         this.registerReceiver(receiver, filter);
 
-        if (Build.VERSION.SDK_INT >= 23)
-            if (! ckeckPermissions())
+        if (! ckeckPermissions())
                 requestPermissions();
 
         // getFragmentManager().beginTransaction().replace(android.R.id.content, new PrefsFragment()).commit();
@@ -173,7 +173,7 @@ public class NetworkActivity extends Activity {
         setContentView(R.layout.main);
 
         // The specified network connection is not available. Displays error message.
-        WebView myWebView = (WebView) findViewById(R.id.webview);
+        WebView myWebView = findViewById(R.id.webview);
         myWebView.loadData(getResources().getString(R.string.connection_error), "text/html", null);
     }
 
@@ -186,6 +186,7 @@ public class NetworkActivity extends Activity {
     }
 
     // Handles the user's menu selection.
+    @SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -222,7 +223,7 @@ public class NetworkActivity extends Activity {
         protected void onPostExecute(String result) {
             setContentView(R.layout.main);
             // Displays the HTML string in the UI via a WebView
-            WebView myWebView = (WebView) findViewById(R.id.webview);
+            WebView myWebView = findViewById(R.id.webview);
             myWebView.loadData(result, "text/html", null);
         }
     }
@@ -232,7 +233,7 @@ public class NetworkActivity extends Activity {
     private String loadXmlFromNetwork(String urlString) throws XmlPullParserException, IOException {
         InputStream stream = null;
         StackOverflowXmlParser stackOverflowXmlParser = new StackOverflowXmlParser();
-        List<Entry> entries = null;
+        List<Entry> entries;
         String title = null;
         String url = null;
         String summary = null;
@@ -333,18 +334,12 @@ public class NetworkActivity extends Activity {
 
 
     private boolean ckeckPermissions() {
-        if (Build.VERSION.SDK_INT >= 23) {
             //String[] PERMISSIONS = {android.Manifest.permission.CALL_PHONE};
-            if (ActivityCompat.checkSelfPermission(getApplicationContext(),
+            return (ActivityCompat.checkSelfPermission(getApplicationContext(),
                     Manifest.permission.INTERNET) ==
                     PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(),
                     Manifest.permission.ACCESS_NETWORK_STATE) ==
-                    PackageManager.PERMISSION_GRANTED)
-                return true;
-            else
-                return false;
-        } else
-            return true;
+                    PackageManager.PERMISSION_GRANTED);
     }
 
     private void requestPermissions() {
